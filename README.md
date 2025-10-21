@@ -259,7 +259,7 @@ This demo uses **Azure Cosmos DB** for state management. Here's why and how it c
 
 ```bash
 # Clone the repository
-git clone https://github.com/Azure-Samples/app-service-agent-framework-travel-agent-dotnet
+git clone https://github.com/Azure-Samples/app-service-agent-framework-travel-agent-dotnet.git
 cd app-service-agent-framework-travel-agent-dotnet
 
 # Login to Azure
