@@ -1,0 +1,18 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/Azure/azure-dev/main/schemas/v1.0/azure.yaml.json
+
+# Name of the application
+name: travel-planner-demo
+metadata:
+  template: travel-planner-demo@0.0.1-beta
+
+# Define the infrastructure location
+infra:
+  provider: bicep
+  path: infra
+  module: main
+
+services:
+  api:
+    project: ./src/TravelPlanner.Api
+    language: csharp
+    host: appservice

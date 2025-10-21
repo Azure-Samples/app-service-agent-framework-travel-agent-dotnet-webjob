@@ -1,0 +1,632 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Travel Planner - AI-Powered Itinerary Generator</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            color: white;
+            margin-bottom: 40px;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .subtitle {
+            font-size: 1.1rem;
+            opacity: 0.95;
+        }
+
+        .form-card {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            animation: fadeIn 0.5s ease-in;
+        }
+
+        .results-card {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            animation: fadeIn 0.5s ease-in;
+            max-width: 100%;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .card h2 {
+            margin-bottom: 20px;
+            color: #333;
+            font-size: 1.5rem;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #555;
+            font-weight: 500;
+        }
+
+        input, select, textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.3s;
+        }
+
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .interests-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .interest-tag {
+            padding: 8px 16px;
+            background: #f0f0f0;
+            border: 2px solid #e0e0e0;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.3s;
+            user-select: none;
+        }
+
+        .interest-tag.selected {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+
+        button {
+            width: 100%;
+            padding: 15px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        button:hover:not(:disabled) {
+            background: #5568d3;
+        }
+
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        .status {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 8px;
+            display: none;
+        }
+
+        .status.show {
+            display: block;
+        }
+
+        .status.loading {
+            background: #e3f2fd;
+            color: #1976d2;
+        }
+
+        .status.success {
+            background: #e8f5e9;
+            color: #388e3c;
+        }
+
+        .status.error {
+            background: #ffebee;
+            color: #c62828;
+            border-left: 4px solid #c62828;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #e0e0e0;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-top: 10px;
+            display: none;
+        }
+
+        .progress-bar.show {
+            display: block;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: #667eea;
+            width: 0%;
+            transition: width 0.3s;
+        }
+
+        .results-container {
+            display: none;
+        }
+
+        .results-container.show {
+            display: block;
+        }
+
+        .itinerary-section {
+            margin-bottom: 40px;
+            padding: 25px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            border: 1px solid #e9ecef;
+        }
+
+        .itinerary-section h3 {
+            color: #667eea;
+            margin-bottom: 20px;
+            font-size: 1.4rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #667eea;
+        }
+
+        .day-card {
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            border-left: 5px solid #667eea;
+            transition: transform 0.2s, box-shadow 0.2s;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        }
+
+        .day-card:hover {
+            transform: translateX(8px);
+            box-shadow: 0 4px 16px rgba(102, 126, 234, 0.25);
+        }
+
+        .day-header {
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 1.2rem;
+            padding-bottom: 12px;
+            border-bottom: 2px solid #e9ecef;
+        }
+
+        .activity {
+            margin-bottom: 18px;
+            padding: 15px;
+            padding-left: 18px;
+            border-left: 3px solid #667eea;
+            background: #f8f9fa;
+            border-radius: 6px;
+            transition: all 0.2s;
+        }
+
+        .activity:hover {
+            border-left-width: 5px;
+            background: #e9ecef;
+            transform: translateX(3px);
+        }
+
+        .activity-time {
+            font-weight: 700;
+            color: #667eea;
+            font-size: 0.95rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .activity-title {
+            font-weight: 600;
+            margin-top: 8px;
+            font-size: 1.05rem;
+            color: #2c3e50;
+        }
+
+        .activity-description {
+            color: #555;
+            margin-top: 6px;
+            line-height: 1.6;
+            font-size: 0.95rem;
+        }
+
+        .budget-breakdown {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+        }
+
+        .budget-item {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            border: 2px solid #e9ecef;
+            transition: all 0.2s;
+        }
+
+        .budget-item:hover {
+            border-color: #667eea;
+            transform: translateY(-3px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
+        }
+
+        .budget-label {
+            color: #666;
+            font-size: 0.95rem;
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+
+        .budget-amount {
+            color: #667eea;
+            font-size: 1.8rem;
+            font-weight: 700;
+        }
+
+        .tips-list, .packing-list {
+            list-style: none;
+            display: grid;
+            gap: 12px;
+        }
+
+        .tips-list li, .packing-list li {
+            padding: 15px 15px 15px 45px;
+            border-radius: 8px;
+            background: white;
+            border-left: 4px solid #667eea;
+            position: relative;
+            transition: all 0.2s;
+        }
+
+        .tips-list li:hover, .packing-list li:hover {
+            transform: translateX(5px);
+            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.15);
+        }
+
+        .tips-list li::before {
+            content: "💡";
+            position: absolute;
+            left: 15px;
+            font-size: 1.2rem;
+        }
+
+        .packing-list li::before {
+            content: "✓";
+            position: absolute;
+            left: 15px;
+            font-size: 1.2rem;
+            color: #667eea;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🌍 AI Travel Planner</h1>
+            <p class="subtitle">Create personalized travel itineraries powered by Azure AI Agent Framework</p>
+        </header>
+
+        <div style="display: flex; flex-direction: column; gap: 30px; margin-bottom: 30px;">
+            <div class="form-card">
+                <h2>Plan Your Trip</h2>
+                <form id="travelForm">
+                    <div class="form-group">
+                        <label for="destination">Destination</label>
+                        <input type="text" id="destination" name="destination" placeholder="e.g., Tokyo, Paris, New York" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="startDate">Start Date</label>
+                        <input type="date" id="startDate" name="startDate" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="endDate">End Date</label>
+                        <input type="date" id="endDate" name="endDate" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="budget">Budget (USD)</label>
+                        <input type="number" id="budget" name="budget" min="100" placeholder="3000" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Interests (select all that apply)</label>
+                        <div class="interests-container" id="interestsContainer">
+                            <div class="interest-tag" data-interest="culture">Culture</div>
+                            <div class="interest-tag" data-interest="food">Food</div>
+                            <div class="interest-tag" data-interest="adventure">Adventure</div>
+                            <div class="interest-tag" data-interest="nature">Nature</div>
+                            <div class="interest-tag" data-interest="history">History</div>
+                            <div class="interest-tag" data-interest="art">Art</div>
+                            <div class="interest-tag" data-interest="shopping">Shopping</div>
+                            <div class="interest-tag" data-interest="technology">Technology</div>
+                            <div class="interest-tag" data-interest="nightlife">Nightlife</div>
+                            <div class="interest-tag" data-interest="relaxation">Relaxation</div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="travelStyle">Travel Style</label>
+                        <select id="travelStyle" name="travelStyle" required>
+                            <option value="">Select style...</option>
+                            <option value="budget">Budget</option>
+                            <option value="comfort">Comfort</option>
+                            <option value="luxury">Luxury</option>
+                            <option value="explorer">Explorer</option>
+                            <option value="relaxed">Relaxed</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="specialRequests">Special Requests (Optional)</label>
+                        <textarea id="specialRequests" name="specialRequests" placeholder="Any dietary restrictions, accessibility needs, or specific preferences..."></textarea>
+                    </div>
+
+                    <button type="submit" id="submitBtn">Generate Travel Plan</button>
+
+                    <div class="status" id="status"></div>
+                    <div class="progress-bar" id="progressBar">
+                        <div class="progress-fill" id="progressFill"></div>
+                    </div>
+                </form>
+            </div>
+
+            <div class="results-card results-container" id="resultsContainer">
+                <h2>✨ Your Travel Plan</h2>
+                <div id="resultsContent"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Set minimum date to today
+        const today = new Date().toISOString().split('T')[0];
+        document.getElementById('startDate').setAttribute('min', today);
+        document.getElementById('endDate').setAttribute('min', today);
+
+        // Interest selection
+        const selectedInterests = new Set();
+        document.querySelectorAll('.interest-tag').forEach(tag => {
+            tag.addEventListener('click', () => {
+                const interest = tag.dataset.interest;
+                if (selectedInterests.has(interest)) {
+                    selectedInterests.delete(interest);
+                    tag.classList.remove('selected');
+                } else {
+                    selectedInterests.add(interest);
+                    tag.classList.add('selected');
+                }
+            });
+        });
+
+        // Update end date minimum when start date changes
+        document.getElementById('startDate').addEventListener('change', (e) => {
+            document.getElementById('endDate').setAttribute('min', e.target.value);
+        });
+
+        // Form submission
+        document.getElementById('travelForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            if (selectedInterests.size === 0) {
+                showStatus('Please select at least one interest', 'error');
+                return;
+            }
+
+            const formData = {
+                destination: document.getElementById('destination').value,
+                startDate: document.getElementById('startDate').value,
+                endDate: document.getElementById('endDate').value,
+                budget: parseFloat(document.getElementById('budget').value),
+                interests: Array.from(selectedInterests),
+                travelStyle: document.getElementById('travelStyle').value,
+                specialRequests: document.getElementById('specialRequests').value || null
+            };
+
+            await submitTravelPlan(formData);
+        });
+
+        async function submitTravelPlan(data) {
+            const submitBtn = document.getElementById('submitBtn');
+            const status = document.getElementById('status');
+            const progressBar = document.getElementById('progressBar');
+            const progressFill = document.getElementById('progressFill');
+            const resultsContainer = document.getElementById('resultsContainer');
+
+            submitBtn.disabled = true;
+            resultsContainer.classList.remove('show');
+            progressBar.classList.add('show');
+            progressFill.style.width = '0%';
+            showStatus('Submitting your travel plan request...', 'loading');
+
+            try {
+                // Submit the travel plan
+                const response = await fetch('/api/travel-plans', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const result = await response.json();
+                const taskId = result.taskId;
+
+                showStatus(`Travel plan submitted! Task ID: ${taskId}. Generating your itinerary...`, 'loading');
+                progressFill.style.width = '10%';
+
+                // Poll for status
+                await pollTaskStatus(taskId);
+
+            } catch (error) {
+                console.error('Error:', error);
+                showStatus(`Error: ${error.message}`, 'error');
+                submitBtn.disabled = false;
+                progressBar.classList.remove('show');
+            }
+        }
+
+        async function pollTaskStatus(taskId) {
+            const submitBtn = document.getElementById('submitBtn');
+            const progressFill = document.getElementById('progressFill');
+            const maxAttempts = 120; // 2 minutes
+            let attempts = 0;
+
+            const poll = async () => {
+                try {
+                    const response = await fetch(`/api/travel-plans/${taskId}`);
+                    
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+
+                    const task = await response.json();
+                    
+                    // Update progress - use correct field names from API
+                    const progress = task.progressPercentage || 0;
+                    const status = task.status || 'processing';
+                    const currentStep = task.currentStep || '';
+                    
+                    progressFill.style.width = `${progress}%`;
+                    
+                    if (currentStep) {
+                        showStatus(`${currentStep} - ${progress}%`, 'loading');
+                    } else {
+                        showStatus(`${status} - ${progress}%`, 'loading');
+                    }
+
+                    if (status === 'completed') {
+                        progressFill.style.width = '100%';
+                        showStatus('Travel plan generated successfully!', 'success');
+                        displayResults(task);
+                        submitBtn.disabled = false;
+                        return;
+                    } else if (status === 'failed') {
+                        throw new Error(task.errorMessage || 'Task failed');
+                    }
+
+                    attempts++;
+                    if (attempts >= maxAttempts) {
+                        throw new Error('Request timeout. Please try again.');
+                    }
+
+                    // Continue polling
+                    setTimeout(poll, 1000);
+
+                } catch (error) {
+                    console.error('Polling error:', error);
+                    showStatus(`Error: ${error.message}`, 'error');
+                    submitBtn.disabled = false;
+                    document.getElementById('progressBar').classList.remove('show');
+                }
+            };
+
+            poll();
+        }
+
+        function showStatus(message, type) {
+            const status = document.getElementById('status');
+            status.textContent = message;
+            status.className = `status show ${type}`;
+        }
+
+        function displayResults(task) {
+            const resultsContainer = document.getElementById('resultsContainer');
+            const resultsContent = document.getElementById('resultsContent');
+            
+            if (!task.result) {
+                resultsContent.innerHTML = '<p>No itinerary data available.</p>';
+                resultsContainer.classList.add('show');
+                return;
+            }
+
+            const result = task.result;
+            
+            if (!result.dailyPlans || result.dailyPlans.length === 0) {
+                resultsContent.innerHTML = '<p>No daily plans generated yet.</p>';
+                resultsContainer.classList.add('show');
+                return;
+            }
+            
+            // Just display the raw agent response with basic markdown formatting
+            const agentResponse = result.dailyPlans[0].morning.description;
+            
+            const formattedResponse = agentResponse
+                .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') // Bold
+                .replace(/##\s*(.*?)$/gm, '<h3 style="color: #667eea; margin-top: 24px; margin-bottom: 12px;">$1</h3>') // H2 headers
+                .replace(/###\s*(.*?)$/gm, '<h4 style="color: #555; margin-top: 20px; margin-bottom: 10px;">$1</h4>') // H3 headers
+                .replace(/---/g, '<hr style="border: none; border-top: 1px solid #e0e0e0; margin: 20px 0;">') // Horizontal rules
+                .replace(/\n\n/g, '<br><br>') // Paragraph breaks
+                .replace(/\n/g, '<br>'); // Line breaks
+
+            resultsContent.innerHTML = `
+                <div style="line-height: 1.8; color: #333; font-size: 1rem;">
+                    ${formattedResponse}
+                </div>
+            `;
+            
+            resultsContainer.classList.add('show');
+            
+            // Scroll to results
+            resultsContainer.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+    </script>
+</body>
+</html>
