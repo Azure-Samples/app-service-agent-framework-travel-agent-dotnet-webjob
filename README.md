@@ -4,6 +4,9 @@ A demonstration of building asynchronous, long-running AI applications using the
 
 See the blog post for more details: [Build Long-Running AI Agents on Azure App Service with Microsoft Agent Framework](https://techcommunity.microsoft.com/blog/appsonazureblog/build-long-running-ai-agents-on-azure-app-service-with-microsoft-agent-framework/4463159)
 
+> **NOTE!**
+> This demo is an alternative that uses WebJobs to the in-process background service approach demonstrated in [this similar repository](https://github.com/Azure-Samples/app-service-agent-framework-travel-agent-dotnet). WebJobs are a great alternative for background processing in App Service, providing better separation of concerns, independent restarts, and dedicated logging. To learn more about WebJobs on App Service, see the [Azure App Service WebJobs documentation](https://learn.microsoft.com/azure/app-service/overview-webjobs).
+
 ## What is Agent Framework?
 
 The [Microsoft Agent Framework](https://learn.microsoft.com/en-us/agent-framework/overview/agent-framework-overview) is a comprehensive platform for building, deploying, and managing AI agents. Unlike simple chat completions, Agent Framework provides:
@@ -30,7 +33,7 @@ This application runs on **Azure App Service** with the API and background worke
 ✅ **Enterprise Features**: Custom domains, SSL, deployment slots, VNet integration  
 ✅ **Managed Identity**: Secure, credential-less authentication to all Azure services
 
-The background worker runs as a **Continuous WebJob**, providing better operational control than an in-process background service while maintaining deployment simplicity.
+The background worker runs as a **Continuous WebJob**, providing better operational control than an in-process background service while maintaining deployment simplicity. For more information on WebJobs on App Service, see the [Azure App Service WebJobs documentation](https://learn.microsoft.com/azure/app-service/overview-webjobs).
 
 ## Why Async Pattern with State Storage?
 
