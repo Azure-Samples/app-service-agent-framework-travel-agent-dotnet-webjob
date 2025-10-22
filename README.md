@@ -117,6 +117,8 @@ API → Return full result
 
 ## Architecture
 
+> 💡 **For detailed architecture information**, see [architecture.md](./architecture.md) for complete diagrams and technical details.
+
 **Async Request-Reply Pattern with Agent Framework:**
 
 ```
