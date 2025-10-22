@@ -121,6 +121,40 @@ API → Return full result
 
 **Async Request-Reply Pattern with Agent Framework:**
 
+```mermaid
+flowchart TB
+    User[User]
+    UI[Web UI - Static HTML]
+    API[App Service API - .NET 9.0]
+    WebJob[Continuous WebJob - Background Worker]
+    ServiceBus[Service Bus - Async Queue]
+    Cosmos[Cosmos DB - Task Status & Results]
+    AI[Azure AI Foundry - GPT-4o + Agent Framework]
+
+    User -->|1. Submit Request| UI
+    UI -->|2. POST /api/travel-plans| API
+    API -->|3. Queue Message| ServiceBus
+    API -->|4. Store Status| Cosmos
+    API -->|5. Return TaskId| UI
+    UI -->|6. Poll Status| API
+    ServiceBus -->|7. Process Message| WebJob
+    WebJob -->|8. Generate Plan| AI
+    AI -->|9. Return Itinerary| WebJob
+    WebJob -->|10. Save Result| Cosmos
+    Cosmos -->|11. Return Complete| UI
+    UI -->|12. Display| User
+
+    style User fill:#e1f5ff
+    style UI fill:#e1f5ff
+    style API fill:#fff4e1
+    style WebJob fill:#ffd4a3
+    style ServiceBus fill:#ffe1f5
+    style Cosmos fill:#e1ffe1
+    style AI fill:#f5e1ff
+```
+
+**Text Diagram:**
+
 ```
 ┌──────────┐      POST          ┌────────────────────────────────┐
 │  Client  │ ─────────────────> │  Azure App Service (P0v4)      │
