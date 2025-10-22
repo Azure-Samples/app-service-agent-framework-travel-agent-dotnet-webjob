@@ -299,7 +299,7 @@ This will:
 
 After the infrastructure is deployed, you need to manually deploy the WebJob through the Azure Portal:
 
-1. **Build the WebJob package:**
+1. **Build the WebJob package and create the ZIP file for the WebJob:**
    ```bash
    dotnet publish ./src/TravelPlanner.WebJob/TravelPlanner.WebJob.csproj -c Release -o ./src/TravelPlanner.WebJob/bin/Release/net9.0/publish
    cd ./src/TravelPlanner.WebJob/bin/Release/net9.0/publish
