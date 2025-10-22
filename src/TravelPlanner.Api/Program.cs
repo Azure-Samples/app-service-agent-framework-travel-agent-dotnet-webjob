@@ -67,10 +67,6 @@ builder.Services.Configure<AgentOptions>(builder.Configuration.GetSection("Agent
 
 // Register application services
 builder.Services.AddScoped<ITravelPlanService, TravelPlanService>();
-builder.Services.AddSingleton<ITravelAgentService, TravelAgentService>();
-
-// Register background worker
-builder.Services.AddHostedService<TravelPlanWorker>();
 
 // Configure CORS for development
 builder.Services.AddCors(options =>

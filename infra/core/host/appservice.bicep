@@ -14,7 +14,7 @@ resource webApp 'Microsoft.Web/sites@2022-09-01' = {
   name: name
   location: location
   tags: tags
-  kind: 'app,linux'
+  kind: 'app'
   identity: managedIdentity ? {
     type: 'SystemAssigned'
   } : null
@@ -22,7 +22,7 @@ resource webApp 'Microsoft.Web/sites@2022-09-01' = {
     serverFarmId: appServicePlanId
     httpsOnly: true
     siteConfig: {
-      linuxFxVersion: '${runtimeName}|${runtimeVersion}'
+      netFrameworkVersion: runtimeName == 'dotnet' ? 'v${runtimeVersion}' : null
       alwaysOn: alwaysOn
       ftpsState: 'Disabled'
       minTlsVersion: '1.2'

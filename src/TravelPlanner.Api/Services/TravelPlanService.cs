@@ -85,7 +85,7 @@ public class TravelPlanService : ITravelPlanService
 
         await _serviceBusSender.SendMessageAsync(serviceBusMessage);
 
-        // Store initial status in Cosmos DB
+        // Store initial status in Cosmos DB with 24-hour TTL
         var taskStatus = new TaskStatus
         {
             TaskId = taskId,
@@ -93,7 +93,8 @@ public class TravelPlanService : ITravelPlanService
             ProgressPercentage = 0,
             CurrentStep = "Request queued for processing",
             CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
+            UpdatedAt = DateTime.UtcNow,
+            Ttl = 86400 // 24 hours in seconds
         };
 
         await StoreTaskStatusAsync(taskStatus);
@@ -104,7 +105,7 @@ public class TravelPlanService : ITravelPlanService
         {
             TaskId = taskId,
             Status = TaskStatusConstants.Queued,
-            StatusUrl = $"{baseUrl}/api/travel-plans/{taskId}/status",
+            StatusUrl = $"{baseUrl}/api/travel-plans/{taskId}",
             ResultUrl = $"{baseUrl}/api/travel-plans/{taskId}/result",
             Message = "Your travel plan is being created. Please check the status URL for updates."
         };

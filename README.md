@@ -1,4 +1,4 @@
-# App Service Agent Framework Travel Planner
+# App Service Agent Framework Travel Planner With WebJob
 
 A demonstration of building asynchronous, long-running AI applications using the [Microsoft Agent Framework](https://learn.microsoft.com/en-us/agent-framework/overview/agent-framework-overview) on Azure App Service. This sample showcases server-side persistent agents with conversation threads, background processing with Service Bus, and state management with Cosmos DB.
 
@@ -18,16 +18,19 @@ This demo uses Azure AI Foundry's implementation of Agent Framework with GPT-4o 
 
 ## Why Azure App Service?
 
-This entire application runs on **Azure App Service** with a combined API and background worker in a single deployment:
+This application runs on **Azure App Service** with the API and background worker deployed as separate components:
 
-✅ **Simplified Architecture**: One App Service hosting both web API and background processing  
-✅ **Cost-Effective**: Single P0v4 Premium instance handles both workloads  
+✅ **Clean Architecture**: Web API and WebJob worker are separate processes  
+✅ **Independent Restarts**: Restart the WebJob without affecting the API  
+✅ **Better Monitoring**: Dedicated WebJob logs and management in Azure Portal  
+✅ **Simplified Deployment**: Single App Service hosts both components  
+✅ **Cost-Effective**: P0v4 Premium instance handles both workloads  
 ✅ **Managed Platform**: No infrastructure management, automatic scaling, built-in load balancing  
-✅ **Always On**: Keeps background worker running continuously without cold starts  
+✅ **Always On**: Keeps WebJob running continuously without cold starts  
 ✅ **Enterprise Features**: Custom domains, SSL, deployment slots, VNet integration  
 ✅ **Managed Identity**: Secure, credential-less authentication to all Azure services
 
-For production workloads requiring independent scaling, you can separate the API and worker into distinct App Services.
+The background worker runs as a **Continuous WebJob**, providing better operational control than an in-process background service while maintaining deployment simplicity.
 
 ## Why Async Pattern with State Storage?
 
@@ -124,13 +127,13 @@ API → Return full result
      │ <───────────────────     │             │ Queue Message    │
      │                          │             ▼                  │
      │   Poll GET /status       │  ┌──────────────────────────┐  │
-     │ ──────────────────>      │  │ Background Worker        │  │
-     │   { progress: 45% }      │  │ (Hosted Service)         │  │
+     │ ──────────────────>      │  │ Continuous WebJob        │  │
+     │   { progress: 45% }      │  │ (TravelPlanWorker)       │  │
      │ <──────────────────      │  │ - Agent Framework        │  │
      │                          │  │ - GPT-4o Integration     │  │
-     │   GET /result            │  └──────────────────────────┘  │
-     │ ──────────────────>      └────────────────────────────────┘
-     │   { itinerary }                │       │           │
+     │   GET /result            │  │ - Service Bus Processor  │  │
+     │ ──────────────────>      │  └──────────────────────────┘  │
+     │   { itinerary }          └────────────────────────────────┘
      │ <──────────────────            │       │           │
                                       ▼       ▼           ▼
                           ┌───────────────────────────────────────┐
@@ -141,11 +144,16 @@ API → Return full result
 
 ### Components
 
-1. **Azure App Service (P0v4 Premium)** - Single app hosting both API and worker
+1. **Azure App Service (P0v4 Premium)** - Hosts both API and WebJob worker
    - **Web API**: Accepts requests, returns 202 immediately, provides polling endpoints
-   - **Background Worker**: Processes Service Bus messages, executes Agent Framework workflows
-   - **Benefits**: Simplified deployment, shared resources, lower cost for demos
-   - **Always On**: Ensures background worker runs continuously without cold starts
+   - **Continuous WebJob**: Separate process running TravelPlanWorker
+     - Processes Service Bus messages
+     - Executes Agent Framework workflows
+     - Independent restart capability
+     - Dedicated logging in Azure Portal
+   - **Benefits**: Better separation of concerns, operational control, easy debugging
+   - **Always On**: Ensures WebJob runs continuously without cold starts
+   - **Single Instance**: `WEBJOBS_RUN_ONCE=true` prevents duplicate message processing
 
 2. **Azure Service Bus (Standard)** - Message Queue
    - Decouples API from long-running Agent Framework processing
@@ -267,22 +275,59 @@ cd app-service-agent-framework-travel-agent-dotnet
 # Login to Azure
 azd auth login
 
-# Provision infrastructure and deploy
+# Provision infrastructure and deploy the API
 azd up
 ```
 
 This will:
 1. Create a new environment (or select existing)
 2. Provision Azure resources:
-   - App Service Plan (P0v4 Premium)
-   - Single App Service (API + Worker combined)
+   - App Service Plan (P0v4 Premium Windows)
+   - App Service (API)
    - Service Bus namespace with `travel-plans` queue
    - Cosmos DB account with SQL API
    - Azure AI Foundry (AI Services + AI Project)
    - GPT-4o model deployment (GlobalStandard 50K TPM)
 3. Configure managed identities and RBAC roles
-4. Build and deploy the application
+4. Build and deploy the API application
 5. Output the web UI URL
+
+### Deploy the WebJob
+
+After the infrastructure is deployed, you need to manually deploy the WebJob through the Azure Portal:
+
+1. **Build the WebJob package:**
+   ```bash
+   dotnet publish ./src/TravelPlanner.WebJob/TravelPlanner.WebJob.csproj -c Release -o ./src/TravelPlanner.WebJob/bin/Release/net9.0/publish
+   cd ./src/TravelPlanner.WebJob/bin/Release/net9.0/publish
+   zip -r ../../../../../travel-plan-worker.zip .
+   cd ../../../../..
+   ```
+
+2. **Deploy via Azure Portal:**
+   - Navigate to your App Service in the [Azure Portal](https://portal.azure.com)
+   - Go to **Settings** → **WebJobs** in the left menu
+   - Click **Add**
+   - Fill in the details:
+     - **Name**: `TravelPlanWorker`
+     - **File Upload**: Select the `travel-plan-worker.zip` file from your project root
+     - **Type**: `Continuous`
+     - **Scale**: `Single Instance`
+   - Click **Create WebJob**
+
+3. **Configure the WebJob app setting:**
+   - Go to **Settings** → **Environment variables** in the left menu
+   - Click **+ Add** under **App settings**
+   - Add the following setting:
+     - **Name**: `WEBJOBS_RUN_ONCE`
+     - **Value**: `true`
+   - Click **Apply**, then **Confirm**
+   - This prevents duplicate message processing when using Service Bus
+
+4. **Verify the WebJob is running:**
+   - In the WebJobs list, verify `TravelPlanWorker` shows status **Running**
+   - Click **Logs** to view real-time execution logs
+   - Test by submitting a travel plan through the web UI
 
 ### Access the Application
 
@@ -311,7 +356,7 @@ After deployment, the following resources are created with managed identity auth
 
 ### Environment Variables
 
-All configuration is automatically set via `azd`. Key settings:
+All configuration except for the WebJob settings is automatically set via `azd`. Key settings:
 
 | Variable | Description |
 |----------|-------------|
@@ -440,9 +485,14 @@ Response when complete:
 
 ## Troubleshooting
 
-### Worker Not Processing Messages
+### WebJob Not Processing Messages
 
-1. **Check Service Bus queue:**
+1. **Check WebJob status in Azure Portal:**
+   - Navigate to App Service → WebJobs
+   - Verify "TravelPlanWorker" shows status "Running"
+   - Click "Logs" to view WebJob execution logs
+
+2. **Check Service Bus queue:**
    ```bash
    az servicebus queue show \
      --name travel-plans \
@@ -451,11 +501,18 @@ Response when complete:
      --query "countDetails"
    ```
 
-2. **Verify managed identity roles:**
+3. **Verify managed identity roles:**
    - App Service identity needs "Azure Service Bus Data Receiver" role
    - Check Azure Portal → Service Bus → Access Control (IAM)
 
-3. **Check dead letter queue:**
+4. **Restart the WebJob:**
+   ```bash
+   # Via Azure CLI
+   az webapp webjobs continuous stop --name <app-name> --resource-group <rg-name> --webjob-name TravelPlanWorker
+   az webapp webjobs continuous start --name <app-name> --resource-group <rg-name> --webjob-name TravelPlanWorker
+   ```
+
+5. **Check dead letter queue:**
    ```bash
    # View dead lettered messages
    az servicebus queue show \
@@ -546,6 +603,8 @@ This demo includes simplifications for clarity:
 **Included Production Features:**
 - ✅ Managed Identity authentication (no secrets)
 - ✅ Premium App Service tier (Always On, better performance)
+- ✅ WebJob architecture (better separation, independent restarts)
+- ✅ Single-instance execution (prevents duplicate processing)
 - ✅ Automatic TTL cleanup (24-hour task expiration)
 - ✅ Dead letter queue for failed messages
 - ✅ Retry logic (max 3 delivery attempts)
@@ -564,17 +623,19 @@ This demo includes simplifications for clarity:
 - 🌍 **Multi-Region**: Deploy to multiple Azure regions for disaster recovery
 - 🧪 **Deployment Slots**: Blue-green deployments for zero-downtime updates
 
-**Why Combined API + Worker?**
-- ✅ Simpler deployment (single app to manage)
-- ✅ Lower cost (~$100/month vs ~$200/month for separate apps)
-- ✅ Shared configuration and dependencies
-- ✅ Acceptable for low-to-moderate traffic demos
+**Why WebJob on Single App Service?**
+- ✅ Better separation (API and worker are separate processes)
+- ✅ Independent restart capability (restart worker without API downtime)
+- ✅ Dedicated monitoring (WebJob logs separate from API logs)
+- ✅ Lower cost than separate apps (~$100/month vs ~$200/month)
+- ✅ Shared configuration and managed identity
+- ✅ Easy local debugging (WebJob runs as console app)
 
-**When to Separate API and Worker:**
-- Scale requirements differ (API needs more instances than worker)
-- CPU-intensive workloads interfere with API responsiveness
-- Independent deployment schedules required
-- High traffic volumes (>100 req/sec sustained)
+**When to Separate into Multiple App Services:**
+- Scale requirements differ significantly (API needs 10+ instances, worker needs 1-2)
+- CPU-intensive worker interferes with API responsiveness
+- Independent deployment schedules critical
+- High traffic volumes (>100 req/sec sustained on API)
 
 ## Beyond the Basics: Expand Your Agent Capabilities
 

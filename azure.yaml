@@ -13,6 +13,8 @@ infra:
 
 services:
   api:
+    language: dotnet
     project: ./src/TravelPlanner.Api
-    language: csharp
     host: appservice
+
+

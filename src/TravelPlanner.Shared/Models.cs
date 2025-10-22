@@ -44,6 +44,7 @@ public class TaskStatus
     public DateTime? UpdatedAt { get; set; }
     public string? ErrorMessage { get; set; }
     public TravelItinerary? Result { get; set; } // Include result when completed
+    public int Ttl { get; set; } = 86400; // Time-to-live in seconds (24 hours)
 }
 
 /// <summary>

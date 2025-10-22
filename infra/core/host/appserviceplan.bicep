@@ -8,8 +8,8 @@ param sku object = {
   capacity: 1
 }
 
-param kind string = 'linux'
-param reserved bool = true
+param kind string = ''
+param reserved bool = false
 
 resource appServicePlan 'Microsoft.Web/serverfarms@2022-09-01' = {
   name: name

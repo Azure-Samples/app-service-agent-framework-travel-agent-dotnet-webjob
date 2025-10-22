@@ -58,8 +58,8 @@ module appServicePlan './core/host/appserviceplan.bicep' = {
       tier: 'PremiumV4'
       capacity: 1
     }
-    kind: 'linux'
-    reserved: true
+    kind: ''
+    reserved: false
   }
 }
 
@@ -140,7 +140,7 @@ module api './core/host/appservice.bicep' = {
     name: actualAppServiceName
     location: location
     appServicePlanId: appServicePlan.outputs.id
-    runtimeName: 'dotnetcore'
+    runtimeName: 'dotnet'
     runtimeVersion: '9.0'
     managedIdentity: true
     alwaysOn: true

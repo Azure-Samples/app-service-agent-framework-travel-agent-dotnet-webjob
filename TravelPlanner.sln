@@ -9,6 +9,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TravelPlanner.Api", "src\Tr
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TravelPlanner.Shared", "src\TravelPlanner.Shared\TravelPlanner.Shared.csproj", "{E429EEED-C2EF-485E-8A32-90DA20513318}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TravelPlanner.WebJob", "src\TravelPlanner.WebJob\TravelPlanner.WebJob.csproj", "{7217FBEE-0808-48E3-8201-A445039AFD0B}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -43,6 +45,18 @@ Global
 		{E429EEED-C2EF-485E-8A32-90DA20513318}.Release|x64.Build.0 = Release|Any CPU
 		{E429EEED-C2EF-485E-8A32-90DA20513318}.Release|x86.ActiveCfg = Release|Any CPU
 		{E429EEED-C2EF-485E-8A32-90DA20513318}.Release|x86.Build.0 = Release|Any CPU
+		{7217FBEE-0808-48E3-8201-A445039AFD0B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7217FBEE-0808-48E3-8201-A445039AFD0B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7217FBEE-0808-48E3-8201-A445039AFD0B}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{7217FBEE-0808-48E3-8201-A445039AFD0B}.Debug|x64.Build.0 = Debug|Any CPU
+		{7217FBEE-0808-48E3-8201-A445039AFD0B}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{7217FBEE-0808-48E3-8201-A445039AFD0B}.Debug|x86.Build.0 = Debug|Any CPU
+		{7217FBEE-0808-48E3-8201-A445039AFD0B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7217FBEE-0808-48E3-8201-A445039AFD0B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7217FBEE-0808-48E3-8201-A445039AFD0B}.Release|x64.ActiveCfg = Release|Any CPU
+		{7217FBEE-0808-48E3-8201-A445039AFD0B}.Release|x64.Build.0 = Release|Any CPU
+		{7217FBEE-0808-48E3-8201-A445039AFD0B}.Release|x86.ActiveCfg = Release|Any CPU
+		{7217FBEE-0808-48E3-8201-A445039AFD0B}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -50,5 +64,6 @@ Global
 	GlobalSection(NestedProjects) = preSolution
 		{BE012EEA-81A7-486B-9537-C0FD1EA69D88} = {827E0CD3-B72D-47B6-A68D-7590B98EB39B}
 		{E429EEED-C2EF-485E-8A32-90DA20513318} = {827E0CD3-B72D-47B6-A68D-7590B98EB39B}
+		{7217FBEE-0808-48E3-8201-A445039AFD0B} = {827E0CD3-B72D-47B6-A68D-7590B98EB39B}
 	EndGlobalSection
 EndGlobal

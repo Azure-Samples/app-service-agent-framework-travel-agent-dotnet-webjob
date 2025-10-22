@@ -49,3 +49,6 @@ Thumbs.db
 
 # Rider
 .idea/
+
+# WebJob deployment artifacts
+travel-plan-worker.zip
